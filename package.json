@@ -83,5 +83,10 @@
         "webpack-cli": "7.0.2",
         "webpack-dev-server": "^5.2.3",
         "workbox-webpack-plugin": "^7.4.1"
+    },
+    "pnpm": {
+        "patchedDependencies": {
+            "@stremio/stremio-video@0.0.79": "patches/@stremio__stremio-video@0.0.79.patch"
+        }
     }
 }

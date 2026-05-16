@@ -467,7 +467,9 @@ const Player = ({ urlParams, queryParams }) => {
         if (!defaultAudioTrackSelected.current) {
             const savedTrackId = player.streamState?.audioTrack?.id;
             const savedTrack = savedTrackId ? findTrackById(video.state.audioTracks, savedTrackId) : null;
-            const audioTrack = savedTrack ?? findTrackByLang(video.state.audioTracks, settings.audioLanguage);
+            const audioTrack = savedTrack ??
+                findTrackByLang(video.state.audioTracks, settings.audioLanguage) ??
+                video.state.audioTracks[0];
 
             if (audioTrack && audioTrack.id) {
                 video.setAudioTrack(audioTrack.id);

@@ -1,0 +1,77 @@
+diff --git a/src/withHTMLSubtitles/subtitlesConverter.js b/src/withHTMLSubtitles/subtitlesConverter.js
+index 5526c98522487d2fa7956f3b2f51944e63353583..e11caa8b594f994fbf0af46e76837240e583d486 100644
+--- a/src/withHTMLSubtitles/subtitlesConverter.js
++++ b/src/withHTMLSubtitles/subtitlesConverter.js
+@@ -6,7 +6,7 @@ function srt2webvtt(data) {
+     // trim white space start and end
+     srt = srt.replace(/^\s+|\s+$/g, '');
+     // get cues
+-    var cuelist = srt.split('\n\n');
++    var cuelist = srt.split(/\n{2,}/);
+     var result = '';
+     if (cuelist.length > 0) {
+         result += 'WEBVTT\n\n';
+@@ -22,39 +22,34 @@ function convertSrtCue(caption) {
+     caption = caption.replace(/<[a-zA-Z/][^>]*>/g, '');
+ 
+     var cue = '';
+-    var s = caption.split(/\n/);
+-    // concatenate muilt-line string separated in array into one
+-    while (s.length > 3) {
+-        for (var i = 3; i < s.length; i++) {
+-            s[2] += '\n' + s[i];
+-        }
+-        s.splice(3, s.length - 3);
+-    }
+-    var line = 0;
+-    // detect identifier
+-    if (!s[0].match(/\d+:\d+:\d+/) && s[1].match(/\d+:\d+:\d+/)) {
+-        cue += s[0].match(/\w+/) + '\n';
+-        line += 1;
++    var s = caption.split(/\n/).map(function(line) {
++        return line.trim();
++    }).filter(Boolean);
++    var timeLine = s.findIndex(function(line) {
++        return /\d+:\d{2}:\d{2}[,.]?\d*\s*--?>\s*\d+:\d{2}:\d{2}[,.]?\d*/.test(line);
++    });
++
++    if (timeLine === -1) {
++        return '';
+     }
+-    // get time strings
+-    if (s[line].match(/\d+:\d+:\d+/)) {
+-        // convert time string
+-        var m = s[1].match(/(\d+):(\d+):(\d+)(?:,(\d+))?\s*--?>\s*(\d+):(\d+):(\d+)(?:,(\d+))?/);
+-        if (m) {
+-            cue += m[1] + ':' + m[2] + ':' + m[3] + '.' + m[4] + ' --> '
+-                + m[5] + ':' + m[6] + ':' + m[7] + '.' + m[8] + '\n';
+-            line += 1;
+-        } else {
+-            // Unrecognized timestring
+-            return '';
+-        }
+-    } else {
+-        // file format error or comment lines
++
++    var m = s[timeLine].match(/(\d+):(\d{2}):(\d{2})(?:[,.](\d{1,3}))?\s*--?>\s*(\d+):(\d{2}):(\d{2})(?:[,.](\d{1,3}))?/);
++    if (!m) {
+         return '';
+     }
++
++    if (timeLine > 0 && !/^\d+$/.test(s[timeLine - 1])) {
++        cue += s[timeLine - 1] + '\n';
++    }
++
++    var startMs = (m[4] || '000').padEnd(3, '0').slice(0, 3);
++    var endMs = (m[8] || '000').padEnd(3, '0').slice(0, 3);
++    cue += m[1] + ':' + m[2] + ':' + m[3] + '.' + startMs + ' --> ' +
++        m[5] + ':' + m[6] + ':' + m[7] + '.' + endMs + '\n';
++
+     // get cue text
+-    if (s[line]) {
+-        cue += s[line] + '\n\n';
++    if (s[timeLine + 1]) {
++        cue += s.slice(timeLine + 1).join('\n') + '\n\n';
+     }
+     return cue;
+ }

@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@stremio/stremio-video@0.0.79':
+    hash: 19f38203926c752f035c43b9ae531aa569b4e3d082483f6351e9c6616285eabf
+    path: patches/@stremio__stremio-video@0.0.79.patch
+
 importers:
 
   .:
@@ -22,7 +27,7 @@ importers:
         version: 5.10.0
       '@stremio/stremio-video':
         specifier: 0.0.79
-        version: 0.0.79
+        version: 0.0.79(patch_hash=19f38203926c752f035c43b9ae531aa569b4e3d082483f6351e9c6616285eabf)
       a-color-picker:
         specifier: 1.2.1
         version: 1.2.1
@@ -6448,7 +6453,7 @@ snapshots:
 
   '@stremio/stremio-icons@5.10.0': {}
 
-  '@stremio/stremio-video@0.0.79':
+  '@stremio/stremio-video@0.0.79(patch_hash=19f38203926c752f035c43b9ae531aa569b4e3d082483f6351e9c6616285eabf)':
     dependencies:
       buffer: 6.0.3
       color: 4.2.3
