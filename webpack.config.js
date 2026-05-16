@@ -7,7 +7,6 @@ const webpack = require('webpack');
 const threadLoader = require('thread-loader');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const WorkboxPlugin = require('workbox-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const packageJson = require('./package.json');
@@ -212,7 +211,7 @@ module.exports = (env, argv) => ({
         new webpack.EnvironmentPlugin({
             SENTRY_DSN: null,
             ...env,
-            SERVICE_WORKER_DISABLED: false,
+            SERVICE_WORKER_DISABLED: true,
             DEBUG: argv.mode !== 'production',
             VERSION: packageJson.version,
             SUB_VERSION: packageJson.subVersion || '',
@@ -220,12 +219,6 @@ module.exports = (env, argv) => ({
         }),
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer']
-        }),
-        argv.mode === 'production' &&
-        new WorkboxPlugin.GenerateSW({
-            maximumFileSizeToCacheInBytes: 20000000,
-            clientsClaim: true,
-            skipWaiting: true
         }),
         new CopyWebpackPlugin({
             patterns: [

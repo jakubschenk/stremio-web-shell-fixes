@@ -53,11 +53,21 @@ root.render(
     </PlatformProvider>
 );
 
-if (process.env.NODE_ENV === 'production' && process.env.SERVICE_WORKER_DISABLED !== 'true' && process.env.SERVICE_WORKER_DISABLED !== true && 'serviceWorker' in navigator) {
+if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-            .catch((registrationError) => {
-                console.error('SW registration failed: ', registrationError);
-            });
+        if (process.env.SERVICE_WORKER_DISABLED === 'true' || process.env.SERVICE_WORKER_DISABLED === true) {
+            navigator.serviceWorker.getRegistrations()
+                .then((registrations) => {
+                    registrations.forEach((registration) => registration.unregister());
+                })
+                .catch((registrationError) => {
+                    console.error('SW unregister failed: ', registrationError);
+                });
+        } else {
+            navigator.serviceWorker.register('service-worker.js')
+                .catch((registrationError) => {
+                    console.error('SW registration failed: ', registrationError);
+                });
+        }
     });
 }
