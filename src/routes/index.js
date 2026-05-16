@@ -8,7 +8,7 @@ const Calendar = require('./Calendar').default;
 const MetaDetails = require('./MetaDetails');
 const NotFound = require('./NotFound');
 const Search = require('./Search');
-const Settings = require('./Settings');
+const Settings = require('./Settings').default;
 const Player = require('./Player');
 const Intro = require('./Intro');
 
