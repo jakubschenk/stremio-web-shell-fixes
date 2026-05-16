@@ -1,6 +1,6 @@
-# Stremio Node 20.x
+# Stremio Node 22.x
 # the node version for running Stremio Web
-ARG NODE_VERSION=20.20.2-alpine
+ARG NODE_VERSION=22.13.1-alpine
 FROM node:$NODE_VERSION AS base
 
 # Setup pnpm

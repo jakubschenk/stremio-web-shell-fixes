@@ -2,7 +2,7 @@
 
 // Copyright (C) 2017-2023 Smart code 203358507
 
-const INDEX_CACHE = 7200;
+const INDEX_CACHE = 0;
 const ASSETS_CACHE = 2629744;
 const HTTP_PORT = 8080;
 
@@ -14,7 +14,7 @@ const index_path = path.join(build_path, 'index.html');
 
 express().use(express.static(build_path, {
     setHeaders: (res, path) => {
-        if (path === index_path) res.set('cache-control', `public, max-age: ${INDEX_CACHE}`);
+        if (path === index_path || path.endsWith('service-worker.js')) res.set('cache-control', `no-store, max-age=${INDEX_CACHE}`);
         else res.set('cache-control', `public, max-age: ${ASSETS_CACHE}`);
     }
 })).all('*', (_req, res) => {
