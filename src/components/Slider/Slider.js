@@ -6,12 +6,12 @@ const classnames = require('classnames');
 const { useRouteFocused } = require('stremio-router');
 const useAnimationFrameModule = require('stremio/common/useAnimationFrame');
 const useLiveRefModule = require('stremio/common/useLiveRef');
-const common = require('stremio/common');
+const platformModule = require('stremio/common/Platform');
 const styles = require('./styles');
 
 const useAnimationFrame = useAnimationFrameModule.default || useAnimationFrameModule;
 const useLiveRef = useLiveRefModule.default || useLiveRefModule;
-const usePlatform = common.usePlatform.default || common.usePlatform;
+const usePlatform = platformModule.usePlatform || platformModule.default?.usePlatform;
 
 const Slider = ({ className, value, buffered, minimumValue, maximumValue, disabled, onSlide, onComplete, audioBoost }) => {
     const minimumValueRef = useLiveRef(minimumValue !== null && !isNaN(minimumValue) ? minimumValue : 0);
