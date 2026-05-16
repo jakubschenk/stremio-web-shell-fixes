@@ -11,7 +11,7 @@ type Lock = 'top' | 'right' | 'bottom' | 'left';
 
 type Props = {
     children: React.ReactNode,
-    on: RefObject<HTMLElement>[],
+    on: (RefObject<HTMLElement> | undefined)[],
     autoClose: boolean,
     lock?: Lock,
 };
@@ -102,11 +102,11 @@ const ContextMenu = ({ children, on, autoClose, lock }: Props) => {
     }, [autoClose]);
 
     useEffect(() => {
-        on.forEach((ref) => ref.current && ref.current.addEventListener('contextmenu', onContextMenu));
+        on.forEach((ref) => ref?.current?.addEventListener('contextmenu', onContextMenu));
         document.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            on.forEach((ref) => ref.current && ref.current.removeEventListener('contextmenu', onContextMenu));
+            on.forEach((ref) => ref?.current?.removeEventListener('contextmenu', onContextMenu));
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [on, onContextMenu, handleKeyDown]);

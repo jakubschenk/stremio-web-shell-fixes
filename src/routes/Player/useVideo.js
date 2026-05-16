@@ -257,6 +257,7 @@ const useVideo = () => {
     return {
         events,
         containerElement,
+        containerRef: containerElement,
         state,
         load,
         unload,
