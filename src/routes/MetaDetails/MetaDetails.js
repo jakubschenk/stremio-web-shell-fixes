@@ -4,8 +4,9 @@ const React = require('react');
 const { useTranslation } = require('react-i18next');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
-const { useServices } = require('stremio/services');
-const { withCoreSuspender, useStorage} = require('stremio/common');
+const { useCore } = require('stremio/core');
+const { useContentGamepadNavigation } = require('stremio/services/GamepadNavigation');
+const { withCoreSuspender } = require('stremio/common');
 const { VerticalNavBar, HorizontalNavBar, DelayedRenderer, Image, MetaPreview, ModalDialog } = require('stremio/components');
 const StreamsList = require('./StreamsList');
 const VideosList = require('./VideosList');
@@ -15,9 +16,9 @@ const useMetaExtensionTabs = require('./useMetaExtensionTabs');
 const styles = require('./styles');
 
 const MetaDetails = ({ urlParams, queryParams }) => {
+    const contentRef = React.useRef(null);
     const { t } = useTranslation();
-    const { core, shell } = useServices();
-    const [storage,] = useStorage();
+    const core = useCore();
     const metaDetails = useMetaDetails(urlParams);
     const [season, setSeason] = useSeason(urlParams, queryParams);
     const [tabs, metaExtension, clearMetaExtension] = useMetaExtensionTabs(metaDetails.metaExtensions);
@@ -65,6 +66,19 @@ const MetaDetails = ({ urlParams, queryParams }) => {
             }
         });
     }, [metaDetails]);
+    const toggleWatched = React.useCallback(() => {
+        if (metaDetails.metaItem === null || metaDetails.metaItem.content.type !== 'Ready') {
+            return;
+        }
+
+        core.transport.dispatch({
+            action: 'MetaDetails',
+            args: {
+                action: 'MarkAsWatched',
+                args: !metaDetails.metaItem.content.content.watched
+            }
+        });
+    }, [metaDetails]);
     const toggleNotifications = React.useCallback(() => {
         if (metaDetails.libraryItem) {
             core.transport.dispatch({
@@ -82,7 +96,11 @@ const MetaDetails = ({ urlParams, queryParams }) => {
     const handleEpisodeSearch = React.useCallback((season, episode) => {
         const searchVideoHash = encodeURIComponent(`${urlParams.id}:${season}:${episode}`);
         const url = window.location.hash;
-        const searchVideoPath = url.replace(encodeURIComponent(urlParams.videoId), searchVideoHash);
+
+        const searchVideoPath = (urlParams.videoId === undefined || urlParams.videoId === null || urlParams.videoId === '') ?
+            url + (!url.endsWith('/') ? '/' : '') + searchVideoHash
+            : url.replace(encodeURIComponent(urlParams.videoId), searchVideoHash);
+
         window.location = searchVideoPath;
     }, [urlParams, window.location]);
 
@@ -95,22 +113,7 @@ const MetaDetails = ({ urlParams, queryParams }) => {
         metaDetails.metaItem.content.content.background.length > 0
     ), [metaPath, metaDetails]);
 
-    React.useEffect(() => {
-        if (
-            metaDetails.metaItem &&
-            metaDetails.metaItem.content.type === 'Ready' &&
-            storage.isDiscordRpcOn
-        ) {
-            const item = metaDetails.metaItem.content.content;
-            shell.transport.send('activity', [
-                'meta-detail',
-                item.type,
-                item.name,
-                item.poster || item.background
-            ]);
-        }
-    }, [metaDetails.metaItem, shell, storage]);
-
+    useContentGamepadNavigation(contentRef, urlParams.path);
     return (
         <div className={styles['metadetails-container']}>
             {
@@ -132,7 +135,7 @@ const MetaDetails = ({ urlParams, queryParams }) => {
                 fullscreenButton={true}
                 navMenu={true}
             />
-            <div className={styles['metadetails-content']}>
+            <div ref={contentRef} className={styles['metadetails-content']}>
                 {
                     tabs.length > 0 ?
                         <VerticalNavBar
@@ -147,20 +150,20 @@ const MetaDetails = ({ urlParams, queryParams }) => {
                     metaPath === null ?
                         <DelayedRenderer delay={500}>
                             <div className={styles['meta-message-container']}>
-                                <Image className={styles['image']} src={require('/images/empty.png')} alt={' '} />
+                                <Image className={styles['image']} src={require('/assets/images/empty.png')} alt={' '} />
                                 <div className={styles['message-label']}>{t('ERR_NO_META_SELECTED')}</div>
                             </div>
                         </DelayedRenderer>
                         :
                         metaDetails.metaItem === null ?
                             <div className={styles['meta-message-container']}>
-                                <Image className={styles['image']} src={require('/images/empty.png')} alt={' '} />
+                                <Image className={styles['image']} src={require('/assets/images/empty.png')} alt={' '} />
                                 <div className={styles['message-label']}>{t('ERR_NO_ADDONS_FOR_META')}</div>
                             </div>
                             :
                             metaDetails.metaItem.content.type === 'Err' ?
                                 <div className={styles['meta-message-container']}>
-                                    <Image className={styles['image']} src={require('/images/empty.png')} alt={' '} />
+                                    <Image className={styles['image']} src={require('/assets/images/empty.png')} alt={' '} />
                                     <div className={styles['message-label']}>{t('ERR_NO_META_FOUND')}</div>
                                 </div>
                                 :
@@ -185,6 +188,8 @@ const MetaDetails = ({ urlParams, queryParams }) => {
                                             trailerStreams={metaDetails.metaItem.content.content.trailerStreams}
                                             inLibrary={metaDetails.metaItem.content.content.inLibrary}
                                             toggleInLibrary={metaDetails.metaItem.content.content.inLibrary ? removeFromLibrary : addToLibrary}
+                                            watched={metaDetails.metaItem.content.content.watched}
+                                            toggleWatched={toggleWatched}
                                             metaId={metaDetails.metaItem.content.content.id}
                                             ratingInfo={metaDetails.ratingInfo}
                                         />
@@ -236,6 +241,7 @@ const MetaDetails = ({ urlParams, queryParams }) => {
 
 MetaDetails.propTypes = {
     urlParams: PropTypes.shape({
+        path: PropTypes.string,
         type: PropTypes.string,
         id: PropTypes.string,
         videoId: PropTypes.string

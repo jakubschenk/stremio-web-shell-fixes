@@ -5,9 +5,10 @@ const PropTypes = require('prop-types');
 const classnames = require('classnames');
 const { useTranslation } = require('react-i18next');
 const { default: Icon } = require('@stremio/stremio-icons/react');
+const { useCore } = require('stremio/core');
 const { usePlatform, useBinaryState, withCoreSuspender } = require('stremio/common');
 const { AddonDetailsModal, Button, Image, MainNavBars, ModalDialog, SearchBar, SharePrompt, TextInput, MultiselectMenu } = require('stremio/components');
-const { useServices } = require('stremio/services');
+const useToast = require('stremio/common/Toast/useToast');
 const Addon = require('./Addon');
 const useInstalledAddons = require('./useInstalledAddons');
 const useRemoteAddons = require('./useRemoteAddons');
@@ -19,7 +20,8 @@ const { AddonPlaceholder } = require('./AddonPlaceholder');
 const Addons = ({ urlParams, queryParams }) => {
     const { t } = useTranslation();
     const platform = usePlatform();
-    const { core, shell } = useServices();
+    const core = useCore();
+    const toast = useToast();
     const installedAddons = useInstalledAddons(urlParams);
     const remoteAddons = useRemoteAddons(urlParams);
     const [addonDetailsTransportUrl, setAddonDetailsTransportUrl] = useAddonDetailsTransportUrl(urlParams, queryParams);
@@ -27,31 +29,19 @@ const Addons = ({ urlParams, queryParams }) => {
     const [filtersModalOpen, openFiltersModal, closeFiltersModal] = useBinaryState(false);
     const [addAddonModalOpen, openAddAddonModal, closeAddAddonModal] = useBinaryState(false);
     const addAddonUrlInputRef = React.useRef(null);
-    const [extensionMappings, setExtensionMappings] = React.useState([]);
-
-    function getRawQueryParam(paramName) {
-        const q = window.location.hash.split('?')[1] || '';
-        return new URLSearchParams(q).get(paramName);
-    }
-
-    React.useEffect(() => {
-        const rawAddonUrl = getRawQueryParam('addon_url');
-        if (rawAddonUrl) {
-            setAddonDetailsTransportUrl(rawAddonUrl);
-            // Remove the addon_url param from the hash URL
-            const hashParts = window.location.hash.split('?');
-            if (hashParts.length > 1) {
-                const params = new URLSearchParams(hashParts[1]);
-                params.delete('addon_url');
-                const newHash = hashParts[0] + (params.toString() ? '?' + params.toString() : '');
-                window.location.replace(newHash);
-            }
-        }
-    }, [queryParams]);
-
     const addAddonOnSubmit = React.useCallback(() => {
         if (addAddonUrlInputRef.current !== null) {
-            setAddonDetailsTransportUrl(addAddonUrlInputRef.current.value);
+            try {
+                let url = new URL(addAddonUrlInputRef.current.value).toString();
+                setAddonDetailsTransportUrl(url);
+            } catch (e) {
+                toast.show({
+                    type: 'error',
+                    title: `Failed to parse addon url: ${addAddonUrlInputRef.current.value}`,
+                    timeout: 10000
+                });
+                console.error('Failed to parse addon url:', e);
+            }
         }
     }, [setAddonDetailsTransportUrl]);
     const addAddonModalButtons = React.useMemo(() => {
@@ -124,33 +114,6 @@ const Addons = ({ urlParams, queryParams }) => {
         setSearch('');
         clearSharedAddon();
     }, [urlParams, queryParams]);
-    React.useEffect(() => {
-        // Supported Browser Extensions manifest data
-        const url = 'https://raw.githubusercontent.com/Zaarrg/stremio-desktop-v5/refs/heads/webview-windows/extensions/extensions.json';
-        fetch(url)
-            .then((res) => res.json())
-            .then((data) => {
-                let browserExtensions = [];
-                if (typeof shell?.transport?.props?.BrowserExtensions === 'object') {
-                    Object.entries(shell.transport.props.BrowserExtensions).map(([extName, extId]) => {
-                        const manifestData = data[extName.split('_')[0]] || data['fallback'];
-                        browserExtensions.push({
-                            'manifest': {
-                                id: extId,
-                                version: extName.split('_')[1],
-                                fallback_name: extName.split('_')[0],
-                                ...manifestData
-                            },
-                            'installed': true,
-                        });
-                    });
-                }
-                setExtensionMappings(browserExtensions);
-            })
-            .catch((err) => {
-                console.error('Failed to fetch extension JSON', err);
-            });
-    }, []);
     return (
         <MainNavBars className={styles['addons-container']} route={'addons'}>
             <div className={styles['addons-content']}>
@@ -211,38 +174,6 @@ const Addons = ({ urlParams, queryParams }) => {
                                                     onOpen={onAddonOpen}
                                                     onShare={onAddonShare}
                                                     dataset={{ addon }}
-                                                    isExtension={false}
-                                                />
-                                            ))
-                                    }
-                                    {
-                                        extensionMappings
-                                            .filter(searchFilterPredicate)
-                                            .map((addon, index) => (
-                                                <Addon
-                                                    key={index}
-                                                    className={classnames(styles['addon'], 'animation-fade-in')}
-                                                    id={addon.manifest.id}
-                                                    name={addon.manifest.name || addon.manifest.fallback_name}
-                                                    version={addon.manifest.version}
-                                                    logo={addon.manifest.logo}
-                                                    description={addon.manifest.description}
-                                                    types={addon.manifest.types}
-                                                    behaviorHints={addon.manifest.behaviorHints}
-                                                    installed={addon.installed}
-                                                    onUninstall={() => {
-                                                        platform.openExternal('https://github.com/Zaarrg/stremio-desktop-v5#-stremio-app');
-                                                    }}
-                                                    onConfigure={() => {
-                                                        if (shell.active) {
-                                                            const uri = `chrome-extension://${addon.manifest.id}/${addon.manifest.page || 'options.html'}`;
-                                                            shell.transport.send('navigate', [uri]);
-                                                        }
-                                                    }}
-                                                    onOpen={onAddonOpen}
-                                                    onShare={onAddonShare}
-                                                    dataset={{ addon }}
-                                                    isExtension={true}
                                                 />
                                             ))
                                     }

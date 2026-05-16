@@ -1,0 +1,34 @@
+diff --git a/src/models/catalogs_with_extra.rs b/src/models/catalogs_with_extra.rs
+index 78a901a3e..36ba3a283 100644
+--- a/src/models/catalogs_with_extra.rs
++++ b/src/models/catalogs_with_extra.rs
+@@ -187,7 +187,14 @@ fn catalogs_update<E: Env + 'static>(
+                         })
+                         .map(|catalog| (catalog.to_owned(), None))
+                         .unwrap_or_else(|| match range {
+-                            Some(range) if range.start <= index && index <= range.end => (
++                            Some(range) if !(range.start <= index && index <= range.end) => (
++                                vec![ResourceLoadable {
++                                    request,
++                                    content: None,
++                                }],
++                                None,
++                            ),
++                            _ => (
+                                 vec![ResourceLoadable {
+                                     request: request.to_owned(),
+                                     content: Some(Loadable::Loading),
+@@ -207,13 +214,6 @@ fn catalogs_update<E: Env + 'static>(
+                                     .into(),
+                                 ),
+                             ),
+-                            _ => (
+-                                vec![ResourceLoadable {
+-                                    request,
+-                                    content: None,
+-                                }],
+-                                None,
+-                            ),
+                         })
+                 })
+                 .unzip::<_, _, Vec<_>, Vec<_>>()

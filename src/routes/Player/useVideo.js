@@ -3,8 +3,7 @@
 const React = require('react');
 const Video = require('@stremio/stremio-video');
 const EventEmitter = require('eventemitter3');
-const {useServices} = require('stremio/services');
-const {useStorage} = require('stremio/common');
+const {usePlatform, useStorage} = require('stremio/common');
 const isoConv = require('iso-language-converter');
 
 const events = new EventEmitter();
@@ -13,7 +12,7 @@ const useVideo = () => {
     const video = React.useRef(null);
     const containerElement = React.useRef(null);
     const [storage,] = useStorage();
-    const { shell } = useServices();
+    const { shell } = usePlatform();
 
     const [state, setState] = React.useState({
         manifest: null,
@@ -27,6 +26,7 @@ const useVideo = () => {
         muted: null,
         playbackSpeed: null,
         videoParams: null,
+        hdrInfo: null,
         audioTracks: [],
         selectedAudioTrackId: null,
         subtitlesTracks: [],
@@ -45,6 +45,7 @@ const useVideo = () => {
         extraSubtitlesTextColor: null,
         extraSubtitlesBackgroundColor: null,
         extraSubtitlesOutlineColor: null,
+        fullscreen: null,
     });
 
     const dispatch = (action, options) => {
@@ -78,7 +79,7 @@ const useVideo = () => {
     const addExtraSubtitlesTracks = (tracks) => {
         if (shell.active && storage.useMpvForExternalSubtitles) {
             tracks.forEach((track) => {
-                shell.transport.send('mpv-command', ['sub-add', track.url, 'auto', `${track.origin} External`, track.lang]);
+                shell.send('mpv-command', ['sub-add', track.url, 'auto', `${track.origin} External`, track.lang]);
             });
             return;
         }
@@ -106,6 +107,30 @@ const useVideo = () => {
         dispatch({ type: 'setProp', propName: name, propValue: value });
     };
 
+    const setPaused = (state) => {
+        setProp('paused', state);
+    };
+
+    const setVolume = (volume) => {
+        setProp('volume', volume);
+    };
+
+    const setMuted = (state) => {
+        setProp('muted', state);
+    };
+
+    const setTime = (time) => {
+        setProp('time', time);
+    };
+
+    const setPlaybackSpeed = (rate) => {
+        setProp('playbackSpeed', rate);
+    };
+
+    const setAudioTrack = (id) => {
+        setProp('selectedAudioTrackId', id);
+    };
+
     const setSubtitlesTrack = (id) => {
         setProp('selectedSubtitlesTrackId', id);
         setProp('selectedExtraSubtitlesTrackId', null);
@@ -114,6 +139,43 @@ const useVideo = () => {
     const setExtraSubtitlesTrack = (id) => {
         setProp('selectedSubtitlesTrackId', null);
         setProp('selectedExtraSubtitlesTrackId', id);
+    };
+
+    const setSubtitlesDelay = (delay) => {
+        setProp('extraSubtitlesDelay', delay);
+    };
+
+    const setSubtitlesSize = (size) => {
+        setProp('subtitlesSize', size);
+        setProp('extraSubtitlesSize', size);
+    };
+
+    const setSubtitlesOffset = (offset) => {
+        setProp('subtitlesOffset', offset);
+        setProp('extraSubtitlesOffset', offset);
+    };
+
+    const setVideoScale = (scale) => {
+        setProp('videoScale', scale);
+    };
+
+    const setFullscreen = (state) => {
+        setProp('fullscreen', state);
+    };
+
+    const setSubtitlesTextColor = (color) => {
+        setProp('subtitlesTextColor', color);
+        setProp('extraSubtitlesTextColor', color);
+    };
+
+    const setSubtitlesBackgroundColor = (color) => {
+        setProp('subtitlesBackgroundColor', color);
+        setProp('extraSubtitlesBackgroundColor', color);
+    };
+
+    const setSubtitlesOutlineColor = (color) => {
+        setProp('subtitlesOutlineColor', color);
+        setProp('extraSubtitlesOutlineColor', color);
     };
 
     const onError = (error) => {
@@ -200,9 +262,22 @@ const useVideo = () => {
         unload,
         addExtraSubtitlesTracks,
         addLocalSubtitles,
-        setProp,
+        setPaused,
+        setVolume,
+        setMuted,
+        setTime,
+        setPlaybackSpeed,
+        setAudioTrack,
         setSubtitlesTrack,
+        setSubtitlesDelay,
+        setSubtitlesSize,
+        setSubtitlesOffset,
+        setSubtitlesTextColor,
+        setSubtitlesBackgroundColor,
+        setSubtitlesOutlineColor,
         setExtraSubtitlesTrack,
+        setVideoScale,
+        setFullscreen,
     };
 };
 

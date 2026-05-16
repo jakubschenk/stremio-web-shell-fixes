@@ -85,7 +85,7 @@ const Library = ({ model, urlParams, queryParams }) => {
                                     <div className={styles['message-container']}>
                                         <Image
                                             className={styles['image']}
-                                            src={require('/images/empty.png')}
+                                            src={require('/assets/images/empty.png')}
                                             alt={' '}
                                         />
                                         <div className={styles['message-label']}>{model === 'library' ? t('LIBRARY_NOT_LOADED') : t('BOARD_CONTINUE_WATCHING_NOT_LOADED')}</div>
@@ -96,7 +96,7 @@ const Library = ({ model, urlParams, queryParams }) => {
                                     <div className={styles['message-container']}>
                                         <Image
                                             className={styles['image']}
-                                            src={require('/images/empty.png')}
+                                            src={require('/assets/images/empty.png')}
                                             alt={' '}
                                         />
                                         <div className={styles['message-label']}>{model === 'library' ? t('LIBRARY_EMPTY') : t('BOARD_CONTINUE_WATCHING_EMPTY')}</div>

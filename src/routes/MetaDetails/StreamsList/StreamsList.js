@@ -6,7 +6,7 @@ const classnames = require('classnames');
 const { useTranslation } = require('react-i18next');
 const { default: Icon } = require('@stremio/stremio-icons/react');
 const { Button, Image, MultiselectMenu } = require('stremio/components');
-const { useServices } = require('stremio/services');
+const { useCore } = require('stremio/core');
 const Stream = require('./Stream');
 const styles = require('./styles');
 const { usePlatform} = require('stremio/common');
@@ -16,7 +16,7 @@ const ALL_ADDONS_KEY = 'ALL';
 
 const StreamsList = ({ className, video, type, onEpisodeSearch, ...props }) => {
     const { t } = useTranslation();
-    const { core } = useServices();
+    const core = useCore();
     const platform = usePlatform();
     const streamsContainerRef = React.useRef(null);
     const [selectedAddon, setSelectedAddon] = React.useState(ALL_ADDONS_KEY);
@@ -100,11 +100,13 @@ const StreamsList = ({ className, video, type, onEpisodeSearch, ...props }) => {
                 {
                     video ?
                         <React.Fragment>
-                            <Button className={classnames(styles['button-container'], styles['back-button-container'])} tabIndex={-1} onClick={backButtonOnClick}>
+                            <Button className={classnames(styles['button-container'], styles['back-button-container'])} tabIndex={0} onClick={backButtonOnClick}>
                                 <Icon className={styles['icon']} name={'chevron-back'} />
                             </Button>
                             <div className={styles['episode-title']}>
-                                {`S${video?.season}E${video?.episode} ${(video?.title)}`}
+                                {typeof video.season === 'number' && typeof video.episode === 'number'
+                                    ? `S${video.season}E${video.episode}${video.title ? ` ${video.title}` : ''}`
+                                    : (video.title ?? '')}
                             </div>
                         </React.Fragment>
                         :
@@ -128,7 +130,7 @@ const StreamsList = ({ className, video, type, onEpisodeSearch, ...props }) => {
                                 <SeasonEpisodePicker className={styles['search']} onSubmit={handleEpisodePicker} />
                                 : null
                         }
-                        <Image className={styles['image']} src={require('/images/empty.png')} alt={' '} />
+                        <Image className={styles['image']} src={require('/assets/images/empty.png')} alt={' '} />
                         <div className={styles['label']}>{t('ERR_NO_ADDONS_FOR_STREAMS')}</div>
                     </div>
                     :
@@ -144,7 +146,7 @@ const StreamsList = ({ className, video, type, onEpisodeSearch, ...props }) => {
                                     <div className={styles['label']}>{t('UPCOMING')}...</div>
                                     : null
                             }
-                            <Image className={styles['image']} src={require('/images/empty.png')} alt={' '} />
+                            <Image className={styles['image']} src={require('/assets/images/empty.png')} alt={' '} />
                             <div className={styles['label']}>{t('NO_STREAM')}</div>
                         </div>
                         :
@@ -155,17 +157,6 @@ const StreamsList = ({ className, video, type, onEpisodeSearch, ...props }) => {
                             </div>
                             :
                             <React.Fragment>
-                                {
-                                    countLoadingAddons > 0 ?
-                                        <div className={styles['addons-loading-container']}>
-                                            <div className={styles['addons-loading']}>
-                                                {countLoadingAddons} {t('MOBILE_ADDONS_LOADING')}
-                                            </div>
-                                            <span className={styles['addons-loading-bar']}></span>
-                                        </div>
-                                        :
-                                        null
-                                }
                                 <div className={styles['streams-container']} ref={streamsContainerRef}>
                                     {filteredStreams.map((stream, index) => (
                                         <Stream
@@ -182,6 +173,17 @@ const StreamsList = ({ className, video, type, onEpisodeSearch, ...props }) => {
                                         />
                                     ))}
                                 </div>
+                                {
+                                    countLoadingAddons > 0 ?
+                                        <div className={styles['addons-loading-container']}>
+                                            <div className={styles['addons-loading']}>
+                                                {countLoadingAddons} {t('MOBILE_ADDONS_LOADING')}
+                                            </div>
+                                            <span className={styles['addons-loading-bar']}></span>
+                                        </div>
+                                        :
+                                        null
+                                }
                             </React.Fragment>
             }
 

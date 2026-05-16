@@ -9,23 +9,19 @@ const { default: Icon } = require('@stremio/stremio-icons/react');
 const { useRouteFocused } = require('stremio-router');
 const Button = require('stremio/components/Button').default;
 const TextInput = require('stremio/components/TextInput').default;
-const useTorrent = require('stremio/common/useTorrent');
+const { default: usePlayUrl } = require('stremio/common/usePlayUrl');
 const { withCoreSuspender } = require('stremio/common/CoreSuspender');
 const useSearchHistory = require('./useSearchHistory');
 const useLocalSearch = require('./useLocalSearch');
 const styles = require('./styles');
 const useBinaryState = require('stremio/common/useBinaryState');
-const { useServices } = require('stremio/services');
-const {useStorage} = require('stremio/common/Platform');
 
 const SearchBar = React.memo(({ className, query, active }) => {
     const { t } = useTranslation();
-    const { shell } = useServices();
-    const [storage,] = useStorage();
     const routeFocused = useRouteFocused();
     const searchHistory = useSearchHistory();
     const localSearch = useLocalSearch();
-    const { createTorrentFromMagnet } = useTorrent();
+    const { handlePlayUrl } = usePlayUrl();
 
     const [historyOpen, openHistory, closeHistory, ] = useBinaryState(query === null ? true : false);
     const [currentQuery, setCurrentQuery] = React.useState(query || '');
@@ -52,51 +48,28 @@ const SearchBar = React.memo(({ className, query, active }) => {
         };
     }, [searchHistoryOnClose]);
 
-    const checkMagnetOrHttp = React.useCallback((value) => {
-        if (value.startsWith('magnet:')) {
-            try {
-                createTorrentFromMagnet(value);
-                return true;
-            } catch (error) {
-                console.error('Failed to create torrent from magnet:', error);
-                return false;
-            }
-        } else if (shell && shell.transport && value.startsWith('http')) {
-            shell.transport.playLocalFile(value);
-            return true;
-        } else {
-            return false;
-        }
-    }, [createTorrentFromMagnet, storage]);
-
     const queryInputOnChange = React.useCallback(() => {
         const value = searchInputRef.current.value;
+        setCurrentQuery(value);
         openHistory();
-        if (storage.parseOnPaste) {
-            if (checkMagnetOrHttp(value)) {
-                return;
-            }
-            setCurrentQuery(value);
-        } else {
-            setCurrentQuery(value);
+    }, []);
+
+    const queryInputOnPaste = React.useCallback((event) => {
+        const pasted = event.clipboardData.getData('text');
+        if (pasted) {
+            handlePlayUrl(pasted);
         }
-    }, [createTorrentFromMagnet, storage]);
+    }, [handlePlayUrl]);
 
     const queryInputOnSubmit = React.useCallback((event) => {
         event.preventDefault();
-        const value = event.target.value;
-        if (!storage.parseOnPaste) {
-            if (checkMagnetOrHttp(value)) {
-                return;
-            }
-        }
-        const searchValue = `/search?search=${encodeURIComponent(value)}`;
+        const searchValue = `/search?search=${encodeURIComponent(event.target.value)}`;
         setCurrentQuery(searchValue);
         if (searchInputRef.current && searchValue) {
             window.location.hash = searchValue;
             closeHistory();
         }
-    }, [storage]);
+    }, []);
 
     const queryInputClear = React.useCallback(() => {
         searchInputRef.current.value = '';
@@ -137,6 +110,7 @@ const SearchBar = React.memo(({ className, query, active }) => {
                         defaultValue={query}
                         tabIndex={-1}
                         onChange={queryInputOnChange}
+                        onPaste={queryInputOnPaste}
                         onSubmit={queryInputOnSubmit}
                         onClick={openHistory}
                     />

@@ -1,8 +1,8 @@
 const React = require('react');
-const {useServices} = require('stremio/services');
+const { usePlatform } = require('stremio/common');
 
 const PipHandler = () => {
-    const { shell } = useServices();
+    const { shell } = usePlatform();
 
     const style = {
         position: 'fixed',
@@ -18,7 +18,7 @@ const PipHandler = () => {
 
     const handleMouseDown = (event) => {
         if (event.button === 0) {
-            shell.transport.send('start-drag', {});
+            shell.send('start-drag', {});
         }
     };
 

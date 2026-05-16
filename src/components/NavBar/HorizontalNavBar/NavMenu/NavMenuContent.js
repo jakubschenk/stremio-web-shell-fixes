@@ -5,24 +5,26 @@ const PropTypes = require('prop-types');
 const classnames = require('classnames');
 const { useTranslation } = require('react-i18next');
 const { default: Icon } = require('@stremio/stremio-icons/react');
-const { useServices } = require('stremio/services');
+const { useCore } = require('stremio/core');
 const { Button } = require('stremio/components');
-const { default: useFullscreen } = require('stremio/common/useFullscreen');
+const { useFullscreen } = require('stremio/common/Fullscreen');
 const useProfile = require('stremio/common/useProfile');
 const usePWA = require('stremio/common/usePWA');
-const useTorrent = require('stremio/common/useTorrent');
+const { default: usePlayUrl } = require('stremio/common/usePlayUrl');
+const useToast = require('stremio/common/Toast/useToast');
 const { withCoreSuspender } = require('stremio/common/CoreSuspender');
 const useStreamingServer = require('stremio/common/useStreamingServer');
 const styles = require('./styles');
 
 const NavMenuContent = ({ onClick }) => {
     const { t } = useTranslation();
-    const { core, shell } = useServices();
+    const core = useCore();
     const profile = useProfile();
     const streamingServer = useStreamingServer();
-    const { createTorrentFromMagnet } = useTorrent();
-    const [fullscreen, requestFullscreen, exitFullscreen] = useFullscreen();
-    const [isIOSPWA, isAndroidPWA] = usePWA();
+    const { handlePlayUrl } = usePlayUrl();
+    const toast = useToast();
+    const [fullscreen, requestFullscreen, exitFullscreen, , supported] = useFullscreen();
+    const [, isAndroidPWA] = usePWA();
     const streamingServerWarningDismissed = React.useMemo(() => {
         return streamingServer.settings !== null && streamingServer.settings.type === 'Ready' || (
             !isNaN(profile.settings.streamingServerWarningDismissed.getTime()) &&
@@ -40,15 +42,18 @@ const NavMenuContent = ({ onClick }) => {
     const onPlayMagnetLinkClick = React.useCallback(async () => {
         try {
             const clipboardText = await navigator.clipboard.readText();
-            if (shell && shell.transport && clipboardText.startsWith('http')) {
-                shell.transport.playLocalFile(clipboardText);
-            } else {
-                createTorrentFromMagnet(clipboardText);
+            const handled = await handlePlayUrl(clipboardText);
+            if (!handled) {
+                toast.show({
+                    type: 'error',
+                    title: 'Clipboard does not contain a valid URL or magnet link.',
+                    timeout: 5000
+                });
             }
         } catch(e) {
             console.error(e);
         }
-    }, []);
+    }, [handlePlayUrl]);
     return (
         <div className={classnames(styles['nav-menu-container'], 'animation-fade-in', { [styles['with-warning']]: !streamingServerWarningDismissed } )} onClick={onClick}>
             <div className={styles['user-info-container']}>
@@ -56,12 +61,12 @@ const NavMenuContent = ({ onClick }) => {
                     className={styles['avatar-container']}
                     style={{
                         backgroundImage: profile.auth === null ?
-                            `url('${require('/images/anonymous.png')}')`
+                            `url('${require('/assets/images/anonymous.png')}')`
                             :
                             profile.auth.user.avatar ?
                                 `url('${profile.auth.user.avatar}')`
                                 :
-                                `url('${require('/images/default_avatar.png')}')`
+                                `url('${require('/assets/images/default_avatar.png')}')`
                     }}
                 />
                 <div className={styles['user-info-details']}>
@@ -74,7 +79,7 @@ const NavMenuContent = ({ onClick }) => {
                 </div>
             </div>
             {
-                !isIOSPWA && !isAndroidPWA ?
+                supported && !isAndroidPWA ?
                     <div className={styles['nav-menu-section']}>
                         <Button className={styles['nav-menu-option-container']} title={fullscreen ? t('EXIT_FULLSCREEN') : t('ENTER_FULLSCREEN')} onClick={fullscreen ? exitFullscreen : requestFullscreen}>
                             <Icon className={styles['icon']} name={fullscreen ? 'minimize' : 'maximize'} />

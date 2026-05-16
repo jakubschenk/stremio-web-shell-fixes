@@ -55,15 +55,15 @@ npm run build
 
 ### Board
 
-![Board](/screenshots/board.png)
+![Board](/assets/screenshots/board.png)
 
 ### Discover
 
-![Discover](/screenshots/discover.png)
+![Discover](/assets/screenshots/discover.png)
 
 ### Meta Details
 
-![Meta Details](/screenshots/metadetails.png)
+![Meta Details](/assets/screenshots/metadetails.png)
 
 ## License
 

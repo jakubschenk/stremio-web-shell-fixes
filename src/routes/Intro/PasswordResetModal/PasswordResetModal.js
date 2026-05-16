@@ -19,7 +19,7 @@ const PasswordResetModal = ({ email, onCloseRequest }) => {
         emailRef.current.value.length > 0 && emailRef.current.validity.valid ?
             platform.openExternal('https://www.strem.io/reset-password/' + emailRef.current.value, '_blank')
             :
-            setError('Invalid email');
+            setError(t('INVALID_EMAIL'));
     }, []);
     const passwordResetModalButtons = React.useMemo(() => {
         return [
@@ -31,7 +31,7 @@ const PasswordResetModal = ({ email, onCloseRequest }) => {
                 }
             },
             {
-                label: t('SEND'),
+                label: t('BUTTON_SEND'),
                 props: {
                     onClick: goToPasswordReset
                 }
@@ -52,7 +52,7 @@ const PasswordResetModal = ({ email, onCloseRequest }) => {
                 ref={emailRef}
                 className={styles['credentials-text-input']}
                 type={'email'}
-                placeholder={'Email'}
+                placeholder={t('EMAIL')}
                 defaultValue={typeof email === 'string' ? email : ''}
                 onChange={emailOnChange}
                 onSubmit={goToPasswordReset}

@@ -18,7 +18,7 @@ const mapSelectableInputs = (installedAddons, remoteAddons, t) => {
             () => {
                 const selectableCatalog = remoteAddons.selectable.catalogs
                     .find(({ id }) => id === remoteAddons.selected.request.path.id);
-                return selectableCatalog ? t.stringWithPrefix(selectableCatalog.name, 'ADDON_') : remoteAddons.selected.request.path.id;
+                return selectableCatalog ? t.stringWithPrefix(selectableCatalog.name.toUpperCase(), 'ADDON_') : remoteAddons.selected.request.path.id;
             }
             : null,
         onSelect: (value) => {
@@ -50,7 +50,7 @@ const mapSelectableInputs = (installedAddons, remoteAddons, t) => {
                 remoteAddons.selected !== null ?
                     t.stringWithPrefix(remoteAddons.selected.request.path.type, 'TYPE_')
                     :
-                    typeSelect.title;
+                    t.string('SELECT_TYPE');
         },
         onSelect: (value) => {
             window.location = value;
