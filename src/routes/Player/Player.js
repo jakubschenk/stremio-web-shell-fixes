@@ -77,13 +77,13 @@ const Player = ({ urlParams, queryParams }) => {
         return () => setVideoElement(null);
     }, [video.state.manifest]);
 
-    const [optionsMenuOpen, , closeOptionsMenu, toggleOptionsMenu] = useBinaryState(false);
-    const [subtitlesMenuOpen, , closeSubtitlesMenu, toggleSubtitlesMenu] = useBinaryState(false);
-    const [audioMenuOpen, , closeAudioMenu, toggleAudioMenu] = useBinaryState(false);
-    const [speedMenuOpen, , closeSpeedMenu, toggleSpeedMenu] = useBinaryState(false);
-    const [statisticsMenuOpen, , closeStatisticsMenu, toggleStatisticsMenu] = useBinaryState(false);
+    const [optionsMenuOpen, openOptionsMenu, closeOptionsMenu] = useBinaryState(false);
+    const [subtitlesMenuOpen, openSubtitlesMenu, closeSubtitlesMenu, toggleSubtitlesMenu] = useBinaryState(false);
+    const [audioMenuOpen, openAudioMenu, closeAudioMenu, toggleAudioMenu] = useBinaryState(false);
+    const [speedMenuOpen, openSpeedMenu, closeSpeedMenu, toggleSpeedMenu] = useBinaryState(false);
+    const [statisticsMenuOpen, openStatisticsMenu, closeStatisticsMenu, toggleStatisticsMenu] = useBinaryState(false);
     const [nextVideoPopupOpen, openNextVideoPopup, closeNextVideoPopup] = useBinaryState(false);
-    const [sideDrawerOpen, , closeSideDrawer, toggleSideDrawer] = useBinaryState(false);
+    const [sideDrawerOpen, openSideDrawer, closeSideDrawer, toggleSideDrawer] = useBinaryState(false);
 
     const menusOpen = React.useMemo(() => {
         return optionsMenuOpen || subtitlesMenuOpen || audioMenuOpen || speedMenuOpen || statisticsMenuOpen || sideDrawerOpen || nextVideoPopupOpen;
@@ -295,7 +295,9 @@ const Player = ({ urlParams, queryParams }) => {
             closeStatisticsMenu();
         }
 
-        closeSideDrawer();
+        if (!event.nativeEvent.videosMenuClosePrevented) {
+            closeSideDrawer();
+        }
     }, []);
 
     const onContainerMouseMove = React.useCallback((event) => {
@@ -498,6 +500,49 @@ const Player = ({ urlParams, queryParams }) => {
             closeSpeedMenu();
         }
     }, [video.state.playbackSpeed]);
+
+    const onOptionsMenuRequested = React.useCallback(() => {
+        closeMenus();
+        if (!optionsMenuOpen && player.selected?.stream) {
+            openOptionsMenu();
+        }
+    }, [closeMenus, openOptionsMenu, optionsMenuOpen, player.selected]);
+
+    const onSubtitlesMenuRequested = React.useCallback(() => {
+        closeMenus();
+        if (!subtitlesMenuOpen && allSubtitleTracks.length > 0) {
+            openSubtitlesMenu();
+        }
+    }, [allSubtitleTracks.length, closeMenus, openSubtitlesMenu, subtitlesMenuOpen]);
+
+    const onAudioMenuRequested = React.useCallback(() => {
+        closeMenus();
+        if (!audioMenuOpen && video.state.audioTracks.length > 0) {
+            openAudioMenu();
+        }
+    }, [audioMenuOpen, closeMenus, openAudioMenu, video.state.audioTracks]);
+
+    const onSpeedMenuRequested = React.useCallback(() => {
+        closeMenus();
+        if (!speedMenuOpen && video.state.playbackSpeed !== null) {
+            openSpeedMenu();
+        }
+    }, [closeMenus, openSpeedMenu, speedMenuOpen, video.state.playbackSpeed]);
+
+    const onStatisticsMenuRequested = React.useCallback(() => {
+        closeMenus();
+        const stream = player.selected?.stream;
+        if (!statisticsMenuOpen && streamingServer?.statistics?.type !== 'Err' && typeof stream?.infoHash === 'string' && typeof stream?.fileIdx === 'number') {
+            openStatisticsMenu();
+        }
+    }, [closeMenus, openStatisticsMenu, player.selected, statisticsMenuOpen, streamingServer.statistics]);
+
+    const onSideDrawerRequested = React.useCallback(() => {
+        closeMenus();
+        if (!sideDrawerOpen && player.metaItem?.content?.videos?.length > 0) {
+            openSideDrawer();
+        }
+    }, [closeMenus, openSideDrawer, player.metaItem, sideDrawerOpen]);
 
     React.useEffect(() => {
         const toastFilter = (item) => item?.dataset?.type === 'CoreEvent';
@@ -878,15 +923,15 @@ const Player = ({ urlParams, queryParams }) => {
                 onUnmuteRequested={onUnmuteRequested}
                 onVolumeChangeRequested={onVolumeChangeRequested}
                 onSeekRequested={onSeekRequested}
-                onToggleOptionsMenu={toggleOptionsMenu}
-                onToggleSubtitlesMenu={toggleSubtitlesMenu}
-                onToggleAudioMenu={toggleAudioMenu}
-                onToggleSpeedMenu={toggleSpeedMenu}
+                onToggleOptionsMenu={onOptionsMenuRequested}
+                onToggleSubtitlesMenu={onSubtitlesMenuRequested}
+                onToggleAudioMenu={onAudioMenuRequested}
+                onToggleSpeedMenu={onSpeedMenuRequested}
                 videoScale={video.state.videoScale}
                 videoScaleLabel={VIDEO_SCALE_LABELS[video.state.videoScale || 'contain']}
                 onVideoScaleChanged={onVideoScaleChanged}
-                onToggleStatisticsMenu={toggleStatisticsMenu}
-                onToggleSideDrawer={toggleSideDrawer}
+                onToggleStatisticsMenu={onStatisticsMenuRequested}
+                onToggleSideDrawer={onSideDrawerRequested}
                 onMouseMove={onBarMouseMove}
                 onMouseOver={onBarMouseMove}
                 onTouchEnd={onContainerMouseLeave}
