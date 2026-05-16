@@ -50,31 +50,31 @@ const ControlBar = React.forwardRef(({
     const platform = usePlatform();
     const [chromecastServiceActive, setChromecastServiceActive] = React.useState(() => chromecast.active);
     const [buttonsMenuOpen, , , toggleButtonsMenu] = useBinaryState(false);
-    const handleMenuButtonMouseDown = React.useCallback((event, closePreventedKey, callback) => {
+    const handleMenuButtonClick = React.useCallback((event, callback) => {
         event.preventDefault();
-        event.nativeEvent[closePreventedKey] = true;
+        event.stopPropagation();
         if (typeof callback === 'function') {
             callback();
         }
     }, []);
-    const onSubtitlesButtonMouseDown = React.useCallback((event) => {
-        handleMenuButtonMouseDown(event, 'subtitlesMenuClosePrevented', onToggleSubtitlesMenu);
-    }, [handleMenuButtonMouseDown, onToggleSubtitlesMenu]);
-    const onAudioButtonMouseDown = React.useCallback((event) => {
-        handleMenuButtonMouseDown(event, 'audioMenuClosePrevented', onToggleAudioMenu);
-    }, [handleMenuButtonMouseDown, onToggleAudioMenu]);
-    const onSpeedButtonMouseDown = React.useCallback((event) => {
-        handleMenuButtonMouseDown(event, 'speedMenuClosePrevented', onToggleSpeedMenu);
-    }, [handleMenuButtonMouseDown, onToggleSpeedMenu]);
-    const onVideosButtonMouseDown = React.useCallback((event) => {
-        handleMenuButtonMouseDown(event, 'videosMenuClosePrevented', onToggleSideDrawer);
-    }, [handleMenuButtonMouseDown, onToggleSideDrawer]);
-    const onOptionsButtonMouseDown = React.useCallback((event) => {
-        handleMenuButtonMouseDown(event, 'optionsMenuClosePrevented', onToggleOptionsMenu);
-    }, [handleMenuButtonMouseDown, onToggleOptionsMenu]);
-    const onStatisticsButtonMouseDown = React.useCallback((event) => {
-        handleMenuButtonMouseDown(event, 'statisticsMenuClosePrevented', onToggleStatisticsMenu);
-    }, [handleMenuButtonMouseDown, onToggleStatisticsMenu]);
+    const onSubtitlesButtonClick = React.useCallback((event) => {
+        handleMenuButtonClick(event, onToggleSubtitlesMenu);
+    }, [handleMenuButtonClick, onToggleSubtitlesMenu]);
+    const onAudioButtonClick = React.useCallback((event) => {
+        handleMenuButtonClick(event, onToggleAudioMenu);
+    }, [handleMenuButtonClick, onToggleAudioMenu]);
+    const onSpeedButtonClick = React.useCallback((event) => {
+        handleMenuButtonClick(event, onToggleSpeedMenu);
+    }, [handleMenuButtonClick, onToggleSpeedMenu]);
+    const onVideosButtonClick = React.useCallback((event) => {
+        handleMenuButtonClick(event, onToggleSideDrawer);
+    }, [handleMenuButtonClick, onToggleSideDrawer]);
+    const onOptionsButtonClick = React.useCallback((event) => {
+        handleMenuButtonClick(event, onToggleOptionsMenu);
+    }, [handleMenuButtonClick, onToggleOptionsMenu]);
+    const onStatisticsButtonClick = React.useCallback((event) => {
+        handleMenuButtonClick(event, onToggleStatisticsMenu);
+    }, [handleMenuButtonClick, onToggleStatisticsMenu]);
     const onPlayPauseButtonClick = React.useCallback(() => {
         if (paused) {
             if (typeof onPlayRequested === 'function') {
@@ -173,26 +173,26 @@ const ControlBar = React.forwardRef(({
                         <Button
                             className={styles['control-bar-button']}
                             tabIndex={-1}
-                            onMouseDown={onStatisticsButtonMouseDown}
+                            onClick={onStatisticsButtonClick}
                         >
                             <Icon className={styles['icon']} name="network" />
                         </Button>
                     )}
-                    <Button className={classnames(styles['control-bar-button'], { 'disabled': playbackSpeed === null })} tabIndex={-1} onMouseDown={onSpeedButtonMouseDown}>
+                    <Button className={classnames(styles['control-bar-button'], { 'disabled': playbackSpeed === null })} tabIndex={-1} onClick={onSpeedButtonClick}>
                         <Icon className={styles['icon']} name={'speed'} />
                     </Button>
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': !chromecastServiceActive })} tabIndex={-1} onClick={onChromecastButtonClick}>
                         <Icon className={styles['icon']} name={'cast'} />
                     </Button>
-                    <Button className={classnames(styles['control-bar-button'], { 'disabled': !Array.isArray(subtitlesTracks) || subtitlesTracks.length === 0 })} tabIndex={-1} onMouseDown={onSubtitlesButtonMouseDown}>
+                    <Button className={classnames(styles['control-bar-button'], { 'disabled': !Array.isArray(subtitlesTracks) || subtitlesTracks.length === 0 })} tabIndex={-1} onClick={onSubtitlesButtonClick}>
                         <Icon className={styles['icon']} name={'subtitles'} />
                     </Button>
-                    <Button className={classnames(styles['control-bar-button'], { 'disabled': !Array.isArray(audioTracks) || audioTracks.length === 0 })} tabIndex={-1} onMouseDown={onAudioButtonMouseDown}>
+                    <Button className={classnames(styles['control-bar-button'], { 'disabled': !Array.isArray(audioTracks) || audioTracks.length === 0 })} tabIndex={-1} onClick={onAudioButtonClick}>
                         <Icon className={styles['icon']} name={'audio-tracks'} />
                     </Button>
                     {
                         metaItem?.content?.videos?.length > 0 ?
-                            <Button className={styles['control-bar-button']} tabIndex={-1} onMouseDown={onVideosButtonMouseDown}>
+                            <Button className={styles['control-bar-button']} tabIndex={-1} onClick={onVideosButtonClick}>
                                 <Icon className={styles['icon']} name={'episodes'} />
                             </Button>
                             :
@@ -201,7 +201,7 @@ const ControlBar = React.forwardRef(({
                     <Button className={classnames(styles['control-bar-button'], { 'disabled': videoScale === null })} title={videoScaleLabel} tabIndex={-1} onClick={onVideoScaleChanged}>
                         <Icon className={styles['icon']} name={'scale'} />
                     </Button>
-                    <Button className={classnames(styles['control-bar-button'], { 'disabled': !stream })} tabIndex={-1} onMouseDown={onOptionsButtonMouseDown}>
+                    <Button className={classnames(styles['control-bar-button'], { 'disabled': !stream })} tabIndex={-1} onClick={onOptionsButtonClick}>
                         <Icon className={styles['icon']} name={'more-horizontal'} />
                     </Button>
                 </div>
