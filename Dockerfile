@@ -1,13 +1,14 @@
 # Stremio Node 20.x
 # the node version for running Stremio Web
-ARG NODE_VERSION=20-alpine
+ARG NODE_VERSION=20.20.2-alpine
 FROM node:$NODE_VERSION AS base
 
 # Setup pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ARG PNPM_VERSION=10.30.0
 
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 RUN apk add --no-cache git
 
 # Meta
