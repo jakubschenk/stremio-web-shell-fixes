@@ -8,7 +8,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ARG PNPM_VERSION=10.30.0
 
-RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+RUN npm install --global pnpm@${PNPM_VERSION}
 RUN apk add --no-cache git
 
 # Meta
