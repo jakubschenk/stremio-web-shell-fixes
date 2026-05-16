@@ -5,6 +5,11 @@ import pluginReact from 'eslint-plugin-react';
 import stylistic from '@stylistic/eslint-plugin';
 
 export default [
+    {
+        ignores: [
+            'src/vendor/**',
+        ],
+    },
     pluginJs.configs.recommended,
     ...tseslint.configs.recommended,
     ...tseslint.configs.stylistic,

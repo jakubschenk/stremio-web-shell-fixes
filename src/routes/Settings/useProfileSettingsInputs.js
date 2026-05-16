@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useCore } from 'stremio/core';
 import { CONSTANTS, languageNames, useLanguageSorting, usePlatform } from 'stremio/common';
 
+/* global Profile */
+
 const LANGUAGES_NAMES: Record<string, string> = languageNames;
 
 const usePlayerOptions = (profile: Profile) => {
